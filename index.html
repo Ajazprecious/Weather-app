@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="hhh.css">
+    <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
+  </head>
+  <body>
+    <div class="wrapper">
+      <header><i class='bx bx-left-arrow-alt'></i>Weather App</header>
+      <section class="input-part">
+        <p class="info-txt"></p>
+        <div class="content">
+          <input type="text" spellcheck="false" placeholder="Enter city name" required>
+        </div>
+      </section>
+      <section class="weather-part">
+        <img src="" alt="Weather Icon">
+        <div class="temp">
+          <span class="numb">0</span>
+          <span class="deg">°</span>C
+        </div>
+        <div class="weather">Weather</div>
+        <div class="location">
+          <i class='bx bx-map'></i>
+          <span>City, Country</span>
+        </div>
+        <div class="bottom-details">
+          <div class="column feels">
+            <i class='bx bxs-thermometer'></i>
+            <div class="details">
+              <div class="tem">
+                <span class="num">0</span>
+                <span class="deg">°</span>F
+              </div>
+              <p>Feels like</p>
+            </div>
+          </div>
+          <div class="column humidity">
+            <i class='bx bxs-droplet-half'></i>
+            <div class="details">
+              <span>0%</span>
+              <p>Humidity</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <script>
+        const wrapper = document.querySelector(".wrapper"),
+        inputPart = document.querySelector(".input-part"),
+        infoTxt = inputPart.querySelector(".info-txt"),
+        inputField = inputPart.querySelector("input"),
+        weatherPart = wrapper.querySelector(".weather-part"),
+        wIcon = weatherPart.querySelector("img"),
+        arrowBack = wrapper.querySelector("header i");
+
+        let api;
+
+        inputField.addEventListener("keyup", e =>{
+            if(e.key == "Enter" && inputField.value != ""){
+                requestApi(inputField.value);
+            }
+        })
+
+        function requestApi(city){
+            const apiKey = '18610af454c555dec7e18102fda73bda'; // Replace with your actual API key
+            api = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+            fetchData();
+        }
+
+        function onError(error){
+            infoTxt.innerText = error.message;
+            infoTxt.classList.add("error");
+        }
+
+        function fetchData(){
+            infoTxt.innerText = "Getting weather details...";
+            infoTxt.classList.add("pending");
+            fetch(api).then(res => res.json()).then(result => {
+                weatherDetails(result);
+            }).catch(() =>{
+                infoTxt.innerText = "Something went wrong";
+                infoTxt.classList.replace("pending", "error");
+            });
+        }
+
+        function weatherDetails(info){
+            if(info.cod == "404"){
+                infoTxt.classList.replace("pending", "error");
+                infoTxt.innerText = `${inputField.value} isn't a valid city name`;
+            }else{
+                const city = info.name;
+                const country = info.sys.country;
+                const {description, icon} = info.weather[0];
+                const {temp, feels_like, humidity} = info.main;
+
+                const iconUrl = `http://openweathermap.org/img/wn/${icon}@2x.png`;
+                wIcon.src = iconUrl;
+
+                const tempFahrenheit = (temp * 9/5) + 32;
+                const feelsFahrenheit = (feels_like * 9/5) + 32;
+
+                infoTxt.classList.remove("pending", "error");
+                infoTxt.innerText = "";
+                weatherPart.querySelector(".temp .numb").innerText = Math.round(temp);
+                weatherPart.querySelector(".weather").innerText = description;
+                weatherPart.querySelector(".location span").innerText = `${city}, ${country}`;
+                weatherPart.querySelector(".feels .num").innerText = Math.round(feelsFahrenheit);
+                weatherPart.querySelector(".humidity span").innerText = `${humidity}%`;
+                wrapper.classList.add("active");
+            }
+        }
+        fetch(api).then(res => res.json()).then(result => {
+    console.log(result); // Log entire result
+    weatherDetails(result);
+})
+
+        arrowBack.addEventListener("click", ()=>{
+            wrapper.classList.remove("active");
+        });
+    </script>
+  </body>
+</html>
